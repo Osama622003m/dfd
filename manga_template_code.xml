@@ -1,0 +1,649 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manga_reader_template>
+  <description>
+    قالب احترافي لقراءة المانجا باللغة العربية - تطبيق React + FastAPI + MongoDB
+    يتضمن: صفحة رئيسية، مكتبة المانجا، قارئ متطور، نظام مستخدمين، مفضلات، تقييمات
+  </description>
+  
+  <frontend_files>
+    <!-- Mock Data -->
+    <file path="src/data/mockData.js">
+// Mock data for manga reader template
+export const mockMangas = [
+  {
+    id: "1",
+    title: "أسطورة الساموراي المفقود",
+    englishTitle: "Lost Samurai Legend",
+    description: "قصة ملحمية عن ساموراي شاب يسعى لاستعادة شرف عائلته المفقود في عالم مليء بالسحر والخطر",
+    coverImage: "https://picsum.photos/300/400?random=1",
+    genres: ["أكشن", "مغامرة", "فانتازيا"],
+    status: "مستمر",
+    rating: 4.8,
+    totalChapters: 45,
+    views: 125000,
+    author: "هيروشي تاناكا",
+    lastUpdated: "2025-01-15",
+    chapters: [
+      {
+        id: "ch1",
+        number: 1,
+        title: "البداية",
+        pages: 24,
+        releaseDate: "2024-01-01",
+        images: Array.from({length: 24}, (_, i) => `https://picsum.photos/800/1200?random=${i+1}`)
+      },
+      {
+        id: "ch2", 
+        number: 2,
+        title: "القوة المخفية",
+        pages: 28,
+        releaseDate: "2024-01-08",
+        images: Array.from({length: 28}, (_, i) => `https://picsum.photos/800/1200?random=${i+25}`)
+      }
+    ]
+  },
+  {
+    id: "2",
+    title: "أكاديمية الأبطال الخارقين",
+    englishTitle: "Heroes Academy",
+    description: "في عالم حيث يمتلك 80% من السكان قوى خارقة، يحلم فتى بلا قوى ليصبح البطل الأعظم",
+    coverImage: "https://picsum.photos/300/400?random=2",
+    genres: ["أكشن", "مدرسي", "خارق"],
+    status: "مكتمل",
+    rating: 4.9,
+    totalChapters: 322,
+    views: 2500000,
+    author: "كوهي هوريكوشي",
+    lastUpdated: "2024-12-20",
+    chapters: [
+      {
+        id: "ch1-2",
+        number: 1,
+        title: "ولادة بطل",
+        pages: 20,
+        releaseDate: "2023-01-01",
+        images: Array.from({length: 20}, (_, i) => `https://picsum.photos/800/1200?random=${i+50}`)
+      }
+    ]
+  },
+  {
+    id: "3",
+    title: "مملكة الظلال",
+    englishTitle: "Shadow Kingdom",
+    description: "أمير منفي يعود لاستعادة مملكته من قوى الظلام التي استولت عليها",
+    coverImage: "https://picsum.photos/300/400?random=3",
+    genres: ["فانتازيا", "دراما", "رومانسي"],
+    status: "مستمر",
+    rating: 4.6,
+    totalChapters: 67,
+    views: 890000,
+    author: "يوكي شيمادا",
+    lastUpdated: "2025-01-10"
+  }
+];
+
+export const mockUsers = [
+  {
+    id: "user1",
+    username: "أحمد_المانجا",
+    email: "ahmed@example.com",
+    avatar: "https://picsum.photos/100/100?random=user1",
+    favorites: ["1", "2"],
+    readingHistory: [
+      { mangaId: "1", chapterId: "ch1", progress: 100, lastRead: "2025-01-15" },
+      { mangaId: "1", chapterId: "ch2", progress: 45, lastRead: "2025-01-14" }
+    ],
+    ratings: [
+      { mangaId: "1", rating: 5 },
+      { mangaId: "2", rating: 4 }
+    ]
+  }
+];
+
+export const mockComments = [
+  {
+    id: "comment1",
+    mangaId: "1",
+    chapterId: "ch1",
+    userId: "user1",
+    username: "أحمد_المانجا",
+    content: "فصل رائع جداً! أسلوب الرسم مذهل والقصة مشوقة",
+    timestamp: "2025-01-15T10:30:00Z",
+    likes: 15,
+    replies: [
+      {
+        id: "reply1",
+        userId: "user2",
+        username: "سارة_أوتاكو",
+        content: "أتفق معك تماماً، لا أستطيع الانتظار للفصل القادم",
+        timestamp: "2025-01-15T11:00:00Z",
+        likes: 3
+      }
+    ]
+  }
+];
+
+export const mockGenres = [
+  "أكشن", "مغامرة", "فانتازيا", "رومانسي", "كوميدي", "دراما", 
+  "خارق", "مدرسي", "رياضي", "رعب", "غموض", "علمي خيالي"
+];
+
+export const mockNotifications = [
+  {
+    id: "notif1",
+    type: "new_chapter",
+    title: "فصل جديد متاح!",
+    message: "الفصل 46 من أسطورة الساموراي المفقود متاح الآن",
+    timestamp: "2025-01-15T09:00:00Z",
+    read: false
+  },
+  {
+    id: "notif2",
+    type: "like",
+    title: "إعجاب جديد",
+    message: "أعجب أحد الأشخاص بتعليقك على مملكة الظلال",
+    timestamp: "2025-01-14T15:30:00Z", 
+    read: true
+  }
+];
+    </file>
+    
+    <!-- Contexts -->
+    <file path="src/contexts/AuthContext.js">
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { mockUsers } from '../data/mockData';
+
+const AuthContext = createContext();
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Mock authentication check
+    const savedUser = localStorage.getItem('manga_user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+    setIsLoading(false);
+  }, []);
+
+  const login = async (email, password) => {
+    // Mock login
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+    
+    const foundUser = mockUsers.find(u => u.email === email);
+    if (foundUser && password === 'password') {
+      setUser(foundUser);
+      localStorage.setItem('manga_user', JSON.stringify(foundUser));
+      setIsLoading(false);
+      return { success: true };
+    }
+    
+    setIsLoading(false);
+    return { success: false, error: 'بيانات الدخول غير صحيحة' };
+  };
+
+  const register = async (username, email, password) => {
+    // Mock registration
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const newUser = {
+      id: `user_${Date.now()}`,
+      username,
+      email,
+      avatar: `https://picsum.photos/100/100?random=${Date.now()}`,
+      favorites: [],
+      readingHistory: [],
+      ratings: []
+    };
+    
+    setUser(newUser);
+    localStorage.setItem('manga_user', JSON.stringify(newUser));
+    setIsLoading(false);
+    return { success: true };
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('manga_user');
+  };
+
+  const updateReadingProgress = (mangaId, chapterId, progress) => {
+    if (!user) return;
+    
+    const updatedUser = { ...user };
+    const historyIndex = updatedUser.readingHistory.findIndex(
+      h => h.mangaId === mangaId && h.chapterId === chapterId
+    );
+    
+    const historyItem = {
+      mangaId,
+      chapterId,
+      progress,
+      lastRead: new Date().toISOString()
+    };
+    
+    if (historyIndex >= 0) {
+      updatedUser.readingHistory[historyIndex] = historyItem;
+    } else {
+      updatedUser.readingHistory.push(historyItem);
+    }
+    
+    setUser(updatedUser);
+    localStorage.setItem('manga_user', JSON.stringify(updatedUser));
+  };
+
+  const toggleFavorite = (mangaId) => {
+    if (!user) return;
+    
+    const updatedUser = { ...user };
+    const isFavorite = updatedUser.favorites.includes(mangaId);
+    
+    if (isFavorite) {
+      updatedUser.favorites = updatedUser.favorites.filter(id => id !== mangaId);
+    } else {
+      updatedUser.favorites.push(mangaId);
+    }
+    
+    setUser(updatedUser);
+    localStorage.setItem('manga_user', JSON.stringify(updatedUser));
+  };
+
+  const rateManga = (mangaId, rating) => {
+    if (!user) return;
+    
+    const updatedUser = { ...user };
+    const existingRatingIndex = updatedUser.ratings.findIndex(r => r.mangaId === mangaId);
+    
+    if (existingRatingIndex >= 0) {
+      updatedUser.ratings[existingRatingIndex].rating = rating;
+    } else {
+      updatedUser.ratings.push({ mangaId, rating });
+    }
+    
+    setUser(updatedUser);
+    localStorage.setItem('manga_user', JSON.stringify(updatedUser));
+  };
+
+  const value = {
+    user,
+    isLoading,
+    login,
+    register,
+    logout,
+    updateReadingProgress,
+    toggleFavorite,
+    rateManga
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+    </file>
+
+    <file path="src/contexts/ThemeContext.js">
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+const ThemeContext = createContext();
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within ThemeProvider');
+  }
+  return context;
+};
+
+export const ThemeProvider = ({ children }) => {
+  const [theme, setTheme] = useState('light');
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('manga_theme');
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark');
+    }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('manga_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+    </file>
+
+    <!-- Main App -->
+    <file path="src/App.js">
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { Toaster } from './components/ui/toaster';
+import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
+
+// Pages
+import Home from './components/Home';
+import Library from './components/library/Library';
+import MangaDetail from './components/manga/MangaDetail';
+import MangaReader from './components/manga/MangaReader';
+import Login from './components/auth/Login';
+import Register from './components/auth/Register';
+import Favorites from './components/user/Favorites';
+
+import './App.css';
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <div className="min-h-screen bg-background text-foreground">
+            <Header />
+            <main>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/library" element={<Library />} />
+                <Route path="/manga/:id" element={<MangaDetail />} />
+                <Route path="/read/:mangaId/:chapterId" element={<MangaReader />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/favorites" element={<Favorites />} />
+                
+                {/* Additional routes that could be added */}
+                <Route path="/genres" element={<Library />} />
+                <Route path="/latest" element={<Library />} />
+                <Route path="/trending" element={<Library />} />
+                <Route path="/search" element={<Library />} />
+                
+                {/* 404 fallback */}
+                <Route path="*" element={
+                  <div className="container mx-auto px-4 py-16 text-center">
+                    <h1 className="text-4xl font-bold mb-4">404</h1>
+                    <p className="text-muted-foreground mb-8">الصفحة غير موجودة</p>
+                    <a href="/" className="text-primary hover:underline">
+                      العودة للرئيسية
+                    </a>
+                  </div>
+                } />
+              </Routes>
+            </main>
+            <Footer />
+            <Toaster />
+          </div>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
+
+export default App;
+    </file>
+
+    <!-- Styles -->
+    <file path="src/index.css">
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  direction: rtl;
+  font-family: 'Cairo', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+    "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Cairo', sans-serif;
+  line-height: 1.6;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
+/* Line clamp utility */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Smooth transitions */
+* {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Focus styles */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Animation classes */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInFromLeft 0.5s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInFromRight 0.5s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+    </file>
+
+    <!-- Note: يمكنك الحصول على باقي الملفات (Header, Footer, Home, Library, MangaDetail, MangaReader, Login, Register, Favorites) -->
+    <!-- من خلال استخدام الكود المكتوب سابقاً. هذا XML يحتوي على الملفات الأساسية -->
+    
+  </frontend_files>
+
+  <installation_instructions>
+    <step>1. إنشاء مشروع React جديد: npx create-react-app manga-reader</step>
+    <step>2. تثبيت المكتبات المطلوبة: yarn add react-router-dom @radix-ui/react-* lucide-react tailwindcss</step>
+    <step>3. إضافة التكوينات المطلوبة (tailwind.config.js)</step>
+    <step>4. نسخ الملفات من هذا XML</step>
+    <step>5. تشغيل المشروع: yarn start</step>
+  </installation_instructions>
+
+  <features_included>
+    <feature>صفحة رئيسية مع Hero Section جذاب</feature>
+    <feature>مكتبة مانجا مع فلاتر متقدمة</feature>
+    <feature>قارئ مانجا متطور (صفحة واحدة، صفحتان، تمرير مستمر)</feature>
+    <feature>نظام تسجيل دخول وتسجيل</feature>
+    <feature>نظام مفضلات وتقييمات</feature>
+    <feature>نظام تعليقات</feature>
+    <feature>تصميم متجاوب (Responsive)</feature>
+    <feature>دعم الوضع المظلم/الفاتح</feature>
+    <feature>واجهة باللغة العربية RTL</feature>
+    <feature>تصميم عصري مع Tailwind CSS و shadcn/ui</feature>
+  </features_included>
+
+  <demo_credentials>
+    <email>ahmed@example.com</email>
+    <password>password</password>
+  </demo_credentials>
+
+</manga_reader_template>
